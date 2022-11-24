@@ -12,12 +12,28 @@ app.use(express.json())
 //mongodb conneted 
 
 
-const uri = "mongodb+srv://<username>:<password>@cluster0.lrjyghr.mongodb.net/?retryWrites=true&w=majority";
+const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.lrjyghr.mongodb.net/?retryWrites=true&w=majority`;
+// console.log(uri);
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+const MachineCollection = client.db('machineCollection').collection('latheMachine');
 
 
+async function run(){
+    try{
 
+        app.get('/lathMachine', async(req, res)=>{
+            const query ={}
+            const cursor = await MachineCollection.find(query).toArray();
+            res.send(cursor)
+            console.log(cursor);
+        })
+    }
+    catch(error){
+        console.log('catch erorr is a', error);
+    }
+}
+run();
 
 
 
