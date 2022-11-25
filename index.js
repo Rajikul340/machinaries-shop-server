@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
 const cors = require('cors');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config();
 const port = process.env.PORT || 5000;
 
@@ -26,17 +26,39 @@ async function run(){
         app.get('/AllMachine/:id', async(req, res)=>{
             const id = req.params.id;
             const query ={category_id:id}
-            const cursor = await MachineCollection.findOne(query)
+            const cursor = await MachineCollection.find(query).toArray();
             res.send(cursor)
-            console.log(cursor);
+        
         })
+        // app.get('/AllMachine', async(req, res)=>{
+        //     const query = {}
+        //     const cursor = await MachineCollection.find(query).toArray()
+        //     res.send(cursor)
+        //     console.log("singledata koi ase",cursoer);
+        // })
+   
         //get all machine category
         app.get('/machine_category', async(req, res)=>{
-            const query ={}
-            const cursor = await categoryCollection.find(query).toArray();
+           const query = {}
+            const cursor = await categoryCollection.find(query).toArray()
             res.send(cursor)
-            console.log(cursor);
+            
         })
+        
+        app.get('/machine_category/:id', async(req, res) =>{
+            const id = req.params.id;
+            const query ={category_id :id}
+            const cursor = await categoryCollection.findOne(query)
+            res.send(cursor)
+       
+       })
+       app.post('/AllMachine', async(req, res)=>{
+        const booking = req.body ;
+        const result = await MachineCollection.insertOne(booking);
+        res.send(result);
+        console.log(result);
+      })
+  
     }
     catch(error){
         console.log('catch erorr is a', error);
