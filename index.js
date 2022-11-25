@@ -18,6 +18,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 const MachineCollection = client.db('machineCollection').collection('AllMachine');
 const categoryCollection = client.db('machineCollection').collection('machine_category');
+const usersCollection = client.db("machineCollection").collection("users")
 
 
 async function run(){
@@ -30,12 +31,12 @@ async function run(){
             res.send(cursor)
         
         })
-        // app.get('/AllMachine', async(req, res)=>{
-        //     const query = {}
-        //     const cursor = await MachineCollection.find(query).toArray()
-        //     res.send(cursor)
-        //     console.log("singledata koi ase",cursoer);
-        // })
+        app.get('/AllMachine', async(req, res)=>{
+            const query = {}
+            const cursor = await MachineCollection.find(query).toArray()
+            res.send(cursor)
+            console.log("singledata koi ase",cursor);
+        })
    
         //get all machine category
         app.get('/machine_category', async(req, res)=>{
@@ -58,7 +59,30 @@ async function run(){
         res.send(result);
         console.log(result);
       })
-  
+   //save users
+     app.post('/users', async(req, res)=>{
+        const user = req.body;
+        const result = await usersCollection.insertOne(user);
+        res.send(result)
+        console.log(result);
+     })
+     //get user
+     app.get('/users/:email', async(req, res)=>{
+        const email = req.params.email ;
+        const query ={email:email}
+        const user = await usersCollection.findOne(query);
+        console.log(user);
+        res.send(user);
+
+     })
+    //  app.get('/users', async(req,res)=>{
+    //     const query = {}
+    //     const result = await usersCollection.find(query).toArray()
+    //     res.send(result);
+    //     console.log(result);
+
+    //  })
+   
     }
     catch(error){
         console.log('catch erorr is a', error);
