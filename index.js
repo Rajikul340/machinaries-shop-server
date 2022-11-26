@@ -19,6 +19,7 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 const MachineCollection = client.db('machineCollection').collection('AllMachine');
 const categoryCollection = client.db('machineCollection').collection('machine_category');
 const usersCollection = client.db("machineCollection").collection("users")
+const paymentCollection = client.db("machineCollection").collection("payment")
 
 
 async function run(){
@@ -71,17 +72,44 @@ async function run(){
         const email = req.params.email ;
         const query ={email:email}
         const user = await usersCollection.findOne(query);
-        console.log(user);
+        console.log("email user",user);
         res.send(user);
 
      })
-    //  app.get('/users', async(req,res)=>{
-    //     const query = {}
-    //     const result = await usersCollection.find(query).toArray()
-    //     res.send(result);
-    //     console.log(result);
+     app.get('/users', async(req,res)=>{
+        const query = {}
+        const result = await usersCollection.find(query).toArray()
+        res.send(result);
+        console.log(result);
 
-    //  })
+     })
+
+       //delete user
+     app.delete("/users/:id", async (req, res) => {
+        const id = req.params.id;
+        console.log('delete id', id);
+        const query = { _id: ObjectId(id) };
+        console.log('delete query ', query);
+        const result = await usersCollection.deleteOne(query);
+         console.log('delte reuse', result);
+        res.send(result);
+      });
+      //delete booking 
+     app.delete("/AllMachine/:id", async (req, res) => {
+        const id = req.params.id;
+        const query = { _id: ObjectId(id) };
+        const result = await MachineCollection.deleteOne(query);
+         console.log('delte reuse', result);
+        res.send(result);
+      });
+
+      app.post('/payment', async(req, res)=>{
+        const user = req.body;
+        const result = await usersCollection.insertOne(user);
+        res.send(result)
+        console.log(result);
+     })
+   
    
     }
     catch(error){
