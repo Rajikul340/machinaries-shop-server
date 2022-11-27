@@ -23,8 +23,43 @@ const usersCollection = client.db("machineCollection").collection("users")
 const paymentCollection = client.db("machineCollection").collection("payment")
 
 
+//verifyjwt
+
+function verifyJWT(req, res, next) {
+
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+        return res.status(401).send('unauthorized access');
+    }
+
+    const token = authHeader.split(' ')[1];
+
+    jwt.verify(token, process.env.ACCESS_TOKEN, function (err, decoded) {
+        if (err) {
+            return res.status(403).send({ message: 'forbidden access' })
+        }
+        req.decoded = decoded;
+        next();
+    })
+
+}
+
+
+
 async function run(){
     try{
+
+        app.get('/jwt', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            if (user) {
+                const token = jwt.sign({ email }, process.env.ACCESS_TOKEN, { expiresIn: '1h' })
+                return res.send({ accessToken: token });
+            }
+            res.status(403).send({ accessToken: '' })
+        });
+
 
        //get all machine category
        app.get('/machine_category', async(req, res)=>{
@@ -88,17 +123,17 @@ async function run(){
        
        })
      
-   //save users
-    //  app.post('/users', async(req, res)=>{
-    //     const user = req.body;
-    //     const result = await usersCollection.insertOne(user);
-    //     res.send(result)
-    //     console.log(result);
-    //  })
+//    save users
+     app.post('/users', async(req, res)=>{
+        const user = req.body;
+        const result = await usersCollection.insertOne(user);
+        res.send(result)
+        console.log(result);
+     })
 
      
                //get user by email 
-     app.get('/users/:email', async(req, res)=>{
+     app.get('/users/:email',verifyJWT, async(req, res)=>{
         const email = req.params.email ;
         const query ={email:email}
         console.log('email user email totoo', email, query);
@@ -109,7 +144,7 @@ async function run(){
      })
 
      //update user
-     app.put('/users', async (req, res) => {
+     app.put('/users',verifyJWT, async (req, res) => {
         const email = req.params.email
         const user = req.body
   
@@ -144,7 +179,7 @@ async function run(){
       });
     
       //payment post to db
-      app.put('/payment', async (req, res) =>{
+      app.put('/payment',verifyJWT, async (req, res) =>{
         const payment = req.body;
         const result = await paymentCollection.insertOne(payment);
         const id = payment.bookingId
