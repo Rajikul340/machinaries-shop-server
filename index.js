@@ -37,17 +37,28 @@ async function run(){
         app.get('/AllMachine/:id', async(req, res)=>{
             const id = req.params.id;
             const query ={category_id:id}
-            // const query ={_id:ObjectId(id)}
             const cursor = await MachineCollection.findOne(query);
             res.send(cursor)
         
         })
-        // app.get('/AllMachine', async(req, res)=>{
-        //     const query = {}
-        //     const cursor = await MachineCollection.find(query).toArray()
-        //     res.send(cursor)
-        //     console.log("singledata koi ase",cursor);
-        // })
+        //get all machin data 
+        app.get('/AllMachine', async(req, res)=>{
+            const query = {}
+            const cursor = await MachineCollection.find(query).toArray()
+            res.send(cursor)
+            console.log("singledata koi ase",cursor);
+        })
+
+    
+        app.get('/machineData/:id', async(req, res)=>{
+            const id = req.params.id ;
+            const query = {_id:ObjectId(id)}
+            const cursor = await MachineCollection.find(query).toArray();  
+           
+            console.log(id);
+            res.send(cursor)
+        })
+
 
           //delete booking 
      app.delete("/AllMachine/:id", async (req, res) => {
@@ -57,15 +68,16 @@ async function run(){
        console.log('delte reuse', result);
       res.send(result);
     });
-        //add machine 
+
+        //add booking .. 
         app.post('/AllMachine', async(req, res)=>{
           const booking = req.body ;
-          const result = await MachineCollection.insertOne(booking);
-          res.send(result);
-          console.log(result);
+          const bookingResult = await MachineCollection.insertOne(booking);
+          res.send(bookingResult);
+          console.log(bookingResult);
         })
       
-        
+        //completed to machine cateogory data upload 
         app.get('/machine_category/:id', async(req, res) =>{
             const id = req.params.id;
             const query = {category_id:id}
@@ -83,10 +95,11 @@ async function run(){
     //     res.send(result)
     //     console.log(result);
     //  })
-     //get user
 
+     
+               //get user by email 
      app.get('/users/:email', async(req, res)=>{
-        const email = req.query.email ;
+        const email = req.params.email ;
         const query ={email:email}
         console.log('email user email totoo', email, query);
         const user = await usersCollection.findOne(query);
@@ -94,9 +107,9 @@ async function run(){
         res.send(user);
 
      })
-     //update user
 
-     app.put('/users/:email', async (req, res) => {
+     //update user
+     app.put('/users', async (req, res) => {
         const email = req.params.email
         const user = req.body
   
@@ -110,6 +123,7 @@ async function run(){
         res.send(result)
       })
 
+      //get all user
      app.get('/users', async(req,res)=>{
         const query = {}
         const result = await usersCollection.find(query).toArray()
@@ -129,37 +143,41 @@ async function run(){
         res.send(result);
       });
     
-      app.post('/payment', async(req, res)=>{
+      //payment post to db
+      app.put('/payment', async (req, res) =>{
         const payment = req.body;
-        const id = payment.booking;
-        const filter ={_id:ObjectId(id)}
-        const updateDoc ={
-            $set:{
+        const result = await paymentCollection.insertOne(payment);
+        const id = payment.bookingId
+        const filter = {_id: ObjectId(id)}
+        const updatedDoc = {
+            $set: {
                 paid: true,
                 transactionId: payment.transactionId
             }
         }
-        const result = await paymentCollection.insertOne(payment);
-        const newResult = await paymentCollection.updateOne(filter, updateDoc);
+        const updatedResult = await MachineCollection.updateOne(filter, updatedDoc)
         res.send(result);
-     })
-   
-     app.post('/payment-intents', async(req, res)=>{
-        const booking = req.body;
-        const price = booking?.resalePrice ;
-        const amount = price*100;
-        const paymentIntents = await stripe.paymentIntents.create({
-            currency:'usd',
-            amount:amount,
-            "payment_method_types":[
+        console.log("payment history", result);
+    })
+      //payment post to stripe 
+    
+      app.post('/create-payment-intent', async (req, res) => {
+        const payment = req.body;
+        console.log('payment ',payment);
+        const price = payment.resalePrice;
+        const amount = price * 100;
+
+        const paymentIntent = await stripe.paymentIntents.create({
+            currency: 'usd',
+            amount: amount,
+            "payment_method_types": [
                 "card"
             ]
-
-        })
-
-        res.send({clientSecret:paymentIntents.client_secret})
-   
-    })
+        });
+        res.send({
+            clientSecret: paymentIntent.client_secret,
+        });
+    });
     }
     catch(error){
         console.log('catch erorr is a', error);
