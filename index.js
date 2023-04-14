@@ -133,7 +133,7 @@ async function run(){
 
      
                //get user by email 
-     app.get('/users/:email',verifyJWT, async(req, res)=>{
+     app.get('/users/:email', async(req, res)=>{
         const email = req.params.email ;
         const query ={email:email}
         console.log('email user email totoo', email, query);
@@ -144,7 +144,7 @@ async function run(){
      })
 
      //update user
-     app.put('/users',verifyJWT, async (req, res) => {
+     app.put('/users', async (req, res) => {
         const email = req.params.email
         const user = req.body
   
@@ -179,7 +179,7 @@ async function run(){
       });
     
       //payment post to db
-      app.put('/payment',verifyJWT, async (req, res) =>{
+      app.put('/payment', async (req, res) =>{
         const payment = req.body;
         const result = await paymentCollection.insertOne(payment);
         const id = payment.bookingId
@@ -209,6 +209,8 @@ async function run(){
                 "card"
             ]
         });
+        console.log('paymentintent', paymentIntent);
+        console.log('paymentintent', paymentIntent.client_secret);
         res.send({
             clientSecret: paymentIntent.client_secret,
         });
@@ -217,6 +219,50 @@ async function run(){
     catch(error){
         console.log('catch erorr is a', error);
     }
+
+//for ad :
+app.put('/AllMachine/publish/:id', async (req, res) => {
+    const { id } = req.params;
+    const filter = { _id: ObjectId(id) }
+    const updateDoc = {
+        $set: {
+            type: req.body.type
+        }
+    }
+    try {
+        const result = await MachineCollection.updateOne(filter, updateDoc)
+        res.send({
+            success: true,
+            data: result
+        })
+    } catch (error) {
+        console.log(error.name, error.message)
+        res.send({
+            success: false,
+            message: error.message
+        })
+    }
+})
+//get ad :
+app.get('/advertises', async (req, res) => {
+    const available = req.query.available;
+    const type = req.query.type;
+    const quary = { available: available, type: type }
+    try {
+        const result = await MachineCollection.find(quary).toArray()
+        res.send({
+            success: true,
+            data: result
+        })
+    } catch (error) {
+        console.log(error.name, error.message)
+        res.send({
+            success: false,
+            message: error.message
+        })
+    }
+})
+    
 }
 run();
 
