@@ -20,7 +20,8 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 const MachineCollection = client.db('machineCollection').collection('AllMachine');
 const categoryCollection = client.db('machineCollection').collection('machine_category');
 const usersCollection = client.db("machineCollection").collection("users")
-const paymentCollection = client.db("machineCollection").collection("payment")
+const paymentCollection = client.db("machineCollection").collection("payment");
+const whiteListCollection = client.db("machineCollection").collection("white list")
 
 
 //verifyjwt
@@ -89,7 +90,6 @@ async function run(){
             const id = req.params.id ;
             const query = {_id:ObjectId(id)}
             const cursor = await MachineCollection.find(query).toArray();  
-           
             console.log(id);
             res.send(cursor)
         })
@@ -128,7 +128,7 @@ async function run(){
         const user = req.body;
         const result = await usersCollection.insertOne(user);
         res.send(result)
-        console.log(result);
+        // console.log(result);
      })
 
      
@@ -136,9 +136,9 @@ async function run(){
      app.get('/users/:email', async(req, res)=>{
         const email = req.params.email ;
         const query ={email:email}
-        console.log('email user email totoo', email, query);
+        // console.log('email user email totoo', email, query);
         const user = await usersCollection.findOne(query);
-        console.log("email user",user);
+        // console.log("email user",user);
         res.send(user);
 
      })
@@ -177,7 +177,34 @@ async function run(){
          console.log('delte reuse', result);
         res.send(result);
       });
-    
+
+      //add to white list 
+      app.post('/whitelist', async(req, res)=>{
+        const item = req.body ;
+        // console.log('item', item);
+        const result = await whiteListCollection.insertOne(item);
+         res.send({result, message:"success"})
+      })
+
+ 
+      app.get("/whitelist", async (req, res)=>{
+        const query ={};
+        const result = await whiteListCollection.find(query).toArray();
+        console.log('result', result );
+        res.send(result)
+      })
+
+      // delete white  list product
+      app.delete("/whitelist/:id", async (req, res) => {
+        const id = req.params.id;
+        console.log('id', id);
+        const query = { _id: ObjectId(id)  };
+        console.log('query', query);
+        const result = await whiteListCollection.deleteOne(query);
+        console.log('delete reuslt', result);
+        res.send(result);
+      });
+
       //payment post to db
       app.post('/payment', async (req, res) =>{
         const payment = req.body;
